@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#14324f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PM Exam">
+<title>Project management practice exam</title>
+<style>
+  :root {
+    --bg: #f3f5f7;
+    --card: #ffffff;
+    --text: #17202a;
+    --muted: #5c6b7a;
+    --line: #d5dde6;
+    --accent: #14324f;
+    --accent-2: #1f4e79;
+    --good-bg: #e7f6ee;
+    --good: #146c43;
+    --bad-bg: #fdecea;
+    --bad: #a32015;
+    --warn-bg: #fff6e5;
+    --warn: #8a5a00;
+    --tap: 48px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 17px;
+    line-height: 1.45;
+  }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--accent);
+    color: #fff;
+    padding: 14px 16px 12px;
+    padding-top: calc(14px + env(safe-area-inset-top));
+  }
+  header h1 { font-size: 18px; line-height: 1.3; margin: 0 0 8px; font-weight: 650; }
+  .stats { display: flex; gap: 14px; font-size: 13px; color: #d6e2ee; }
+  .stats strong { color: #fff; font-weight: 650; }
+  .bar { height: 6px; background: rgba(255,255,255,.2); border-radius: 99px; margin-top: 10px; overflow: hidden; display: flex; }
+  .bar span { display: block; height: 100%; }
+  .bar .ok { background: #7dcea0; }
+  .bar .no { background: #f5b7b1; }
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 14px 14px 28px;
+  }
+  label.field { display: block; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  select, button { font: inherit; }
+  select {
+    width: 100%;
+    min-height: var(--tap);
+    font-size: 16px;
+    margin-top: 4px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text);
+  }
+  .meta { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+  .stem { margin: 0 0 10px; }
+  h2 { font-size: 20px; line-height: 1.35; margin: 0 0 14px; }
+  .choice, .order-row {
+    width: 100%;
+    text-align: left;
+    background: #fff;
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+    margin: 0 0 8px;
+    min-height: var(--tap);
+  }
+  .choice { cursor: pointer; }
+  .choice .letter { font-weight: 700; margin-right: 6px; }
+  .choice.selected { border-color: var(--accent-2); background: #eaf2fb; }
+  .choice.correct, .order-row.correct, select.correct { border-color: var(--good); background: var(--good-bg); }
+  .choice.wrong, .order-row.wrong, select.wrong { border-color: var(--bad); background: var(--bad-bg); }
+  .order-row { display: flex; gap: 8px; align-items: center; }
+  .order-row p { margin: 0; flex: 1; }
+  .mini {
+    min-width: 64px;
+    min-height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+  }
+  .note { font-size: 14px; color: var(--muted); margin: 0 0 8px; }
+  .callout { border-radius: 12px; padding: 12px; margin: 12px 0; }
+  .callout.good { background: var(--good-bg); color: #0f5132; }
+  .callout.bad { background: var(--bad-bg); color: #7a1b14; }
+  .callout.warn { background: var(--warn-bg); color: var(--warn); }
+  .callout strong { display: block; margin-bottom: 4px; }
+  .nav, .tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  button.action {
+    min-height: var(--tap);
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+  button.secondary { background: #fff; color: var(--accent); }
+  button.ghost { background: transparent; color: var(--accent); border-color: transparent; }
+  button:disabled { opacity: .45; }
+  .jump { flex: 1; min-width: 140px; }
+  footer { font-size: 13px; color: var(--muted); margin-top: 18px; }
+  .match { margin-bottom: 12px; }
+  .match p { margin: 0 0 4px; font-weight: 650; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Project management practice exam</h1>
+  <div class="stats" id="stats"></div>
+  <div class="bar" id="bar"></div>
+</header>
+<main id="app"></main>
+<script>
+const QUESTIONS = [{"id":"q1","ref":"1","topic":"Fundamentals","kind":"mcq","stem":"","ask":"What is a deliverable?","correct":"A","explanation":"A deliverable is a product, service, or result produced during a project. It is a tangible or measurable output that contributes to completing the project.","options":[{"id":"A","text":"A unique output of a project"},{"id":"B","text":"A resource allocated to the project"},{"id":"C","text":"A checkpoint in the project timeline"},{"id":"D","text":"A team member working on a project"}]},{"id":"q2","ref":"2","topic":"Scope and change","kind":"mcq","stem":"Your customer states that the packaging for the new product must be easy for everyone to open. During product testing, only 60% of the people were able to open the packaging easily.","ask":"As the project manager, what should you do?","correct":"A","explanation":"The requirement says the packaging must be easy for everyone to open. Sixty percent does not meet that requirement. The project manager starts corrective action with the team.","options":[{"id":"A","text":"Request a team meeting to decide on corrective action."},{"id":"B","text":"Inform the project sponsor that the project has failed."},{"id":"C","text":"Meet with the product testers to change the results."},{"id":"D","text":"Inform the customer that more than 50% is an acceptable result."}]},{"id":"q3","ref":"3","topic":"Fundamentals","kind":"mcq","stem":"","ask":"What is a project life cycle?","correct":"C","explanation":"The project life cycle is the series of phases from start to completion. A common sequence is initiating, planning, executing, monitoring, and closing.","options":[{"id":"A","text":"The sequence of activities that determines the shortest possible duration of a project"},{"id":"B","text":"The tasks performed to deliver a product, service, or result with specified features and functions"},{"id":"C","text":"The series of phases that a project passes through from its start to its completion"},{"id":"D","text":"The steps used to identify the best possible solution to a problem"}]},{"id":"q4","ref":"4","topic":"Plans and estimates","kind":"mcq","stem":"","ask":"What is a benefit of creating a lessons learned document?","correct":"A","explanation":"Lessons learned capture what the team gained during the project so later teams can repeat what worked and avoid what did not.","options":[{"id":"A","text":"Sharing best practice approaches among the team members"},{"id":"B","text":"Creating marketing materials that can be used to promote the product"},{"id":"C","text":"Meeting with the client to provide closure to the project"},{"id":"D","text":"Ensuring team members are held responsible for their mistakes"}]},{"id":"q5","ref":"5","topic":"Approaches","kind":"mcq","stem":"","ask":"What is a key characteristic of the adaptive project management approach?","correct":"A","explanation":"Adaptive approaches, including Agile, use ongoing stakeholder feedback and iterative improvement.","options":[{"id":"A","text":"Continuous refinement of the product based upon stakeholder feedback"},{"id":"B","text":"Minimal changes due to familiarity with project requirements"},{"id":"C","text":"Sequential completion of tasks with no change in scope"},{"id":"D","text":"Delivery of the product after the final phase has been completed"}]},{"id":"q6","ref":"6","topic":"Scope and change","kind":"mcq","stem":"You are on a team developing a new app. A team member suggests a feature. The project manager says the feature is out of scope.","ask":"What should you do if a product feature is out of scope?","correct":"A","explanation":"Work outside the approved scope is not built unless it is approved through change management. Adding it on the spot is scope creep.","options":[{"id":"A","text":"You should decline the development of the feature."},{"id":"B","text":"You should develop the feature as part of the project."},{"id":"C","text":"You should consider the feature a project dependency."},{"id":"D","text":"You should add the feature to the scope statement."}]},{"id":"q7","ref":"7","topic":"Fundamentals","kind":"mcq","stem":"","ask":"What role does quality assurance play in the project development process?","correct":"B","explanation":"Quality assurance focuses on process compliance: the team follows the procedures that are supposed to produce work that meets the standard.","options":[{"id":"A","text":"It ensures the project is delivered within budget."},{"id":"B","text":"It ensures procedures are followed to meet standards for performance."},{"id":"C","text":"It ensures employees are qualified to complete their assigned tasks."},{"id":"D","text":"It ensures the project is delivered on time."}]},{"id":"q8","ref":"8","topic":"Fundamentals","kind":"mcq","stem":"","ask":"Which scenario demonstrates a schedule dependency?","correct":"B","explanation":"A schedule dependency exists when one activity cannot start or finish until another activity is done.","options":[{"id":"A","text":"Team members must schedule activities during business hours."},{"id":"B","text":"Team members must wait to start a task until after another task is completed."},{"id":"C","text":"Team members must work independently on tasks."},{"id":"D","text":"Team members must determine the minimum time necessary to complete a project."}]},{"id":"q9","ref":"9","topic":"Fundamentals","kind":"match","stem":"","ask":"Match each project charter element to its description.","explanation":"The charter states why the project exists, the high-level boundaries, the key people, and the project manager's authority to use resources.","choices":["PM authority to use resources","Why the project exists","Key individuals involved","High-level boundaries of the project"],"left":[{"id":"p0","text":"Project purpose","answer":"Why the project exists"},{"id":"p1","text":"Project scope","answer":"High-level boundaries of the project"},{"id":"p2","text":"Stakeholders","answer":"Key individuals involved"},{"id":"p3","text":"Authority","answer":"PM authority to use resources"}]},{"id":"q10","ref":"10","topic":"Scope and change","kind":"mcq","stem":"You are coordinating a party. The customer changes the party date, and you know the venue will cost more.","ask":"What should you do to resolve the budget variance?","correct":"A","explanation":"A date change that raises the venue cost has to be discussed with the customer before you change the budget or the plan.","options":[{"id":"A","text":"Determine the cost difference and discuss options with the customer."},{"id":"B","text":"Cancel the venue contract and then find a new venue."},{"id":"C","text":"Stay at the same venue and tell the caterers to remove menu items to save money."},{"id":"D","text":"Approve the date change and invoice the customer for more money."}]},{"id":"q11","ref":"11","topic":"Procurement and closing","kind":"mcq","stem":"","ask":"Which action signifies the formal acceptance of the final product?","correct":"D","explanation":"Formal acceptance happens when the customer or sponsor approves the deliverable. Paperwork and contract closure follow that acceptance.","options":[{"id":"A","text":"Closing of vendor contracts by the project team"},{"id":"B","text":"Final budget approval by the project manager"},{"id":"C","text":"Completion of all paperwork by the project manager"},{"id":"D","text":"Approval by the project sponsor and customer"}]},{"id":"q12","ref":"12","topic":"Scope and change","kind":"mcq","stem":"You manage a small construction project. A supplier quote is $2,000 higher. You request a meeting with the project sponsor to discuss what to do next.","ask":"Which stage of the change management process are you beginning?","correct":"C","explanation":"The cost increase is already known. Meeting the sponsor to decide what it means is impact assessment, before anyone approves or implements the change.","options":[{"id":"A","text":"Identify the change"},{"id":"B","text":"Approve the change"},{"id":"C","text":"Assess the change impact"},{"id":"D","text":"Implement the approved change"}]},{"id":"q13","ref":"13","topic":"Scope and change","kind":"mcq","stem":"Client feedback requires a scope adjustment and additional funding.","ask":"Who needs to provide the approval to move forward with the changes?","correct":"C","explanation":"The sponsor authorizes the budget and major changes. Extra scope plus extra funding needs the sponsor's approval.","options":[{"id":"A","text":"Business analyst"},{"id":"B","text":"Project manager"},{"id":"C","text":"Project sponsor"},{"id":"D","text":"Resource manager"}]},{"id":"q14","ref":"14","topic":"Approaches","kind":"mcq","stem":"The team has worked on similar projects. The deliverable must comply with standards and regulations. Tasks are well defined, and the deliverable is clearly defined.","ask":"What project management approach should you choose?","correct":"C","explanation":"Predictive fits stable, well-defined work: known tasks, a clear deliverable, a team that has done this before, and compliance with standards.","options":[{"id":"A","text":"Scrum"},{"id":"B","text":"Adaptive"},{"id":"C","text":"Predictive"},{"id":"D","text":"Incremental"}]},{"id":"q15","ref":"15","topic":"Fundamentals","kind":"mcq","stem":"","ask":"Which project document authorizes the project manager to begin working on a project?","correct":"C","explanation":"The project charter formally authorizes the project and gives the project manager authority to apply resources.","options":[{"id":"A","text":"Project management plan"},{"id":"B","text":"Project scope statement"},{"id":"C","text":"Project charter"},{"id":"D","text":"Project communication plan"}]},{"id":"q16","ref":"16","topic":"People and ethics","kind":"mcq","stem":"You are planning a small community event. The project manager assigns a specific location. You find a better location and want the team to use it.","ask":"What responsibility and authority do you have regarding your assigned task?","correct":"A","explanation":"A team member does not change an assigned decision on their own. Raise the better location with the project manager and wait for approval.","options":[{"id":"A","text":"You need to speak with the project manager about changing the location and wait for approval."},{"id":"B","text":"You can change the location without approval and set up for the community event."},{"id":"C","text":"You cannot approve the location change until all team members have voted on the decision."},{"id":"D","text":"You need to inform the sponsor directly about the change and then move the event to the new location."}]},{"id":"q17","ref":"17","topic":"Scope and change","kind":"mcq","stem":"","ask":"What impact does gold plating have on a project?","correct":"B","explanation":"Gold plating adds features the customer did not approve. That grows the scope and increases cost and complexity.","options":[{"id":"A","text":"The scope increases and the cost to the customer remains the same."},{"id":"B","text":"The scope increases and the cost to the customer increases."},{"id":"C","text":"The scope remains the same and the cost to the customer decreases."},{"id":"D","text":"The scope remains the same and the cost to the customer increases."}]},{"id":"q18","ref":"18","topic":"Plans and estimates","kind":"mcq","stem":"You are evaluating the skills the team needs to complete the project.","ask":"Which component of the project management plan are you working on?","correct":"D","explanation":"The resource management plan covers the people, roles, and skills the project needs.","options":[{"id":"A","text":"Cost management plan"},{"id":"B","text":"Scope management plan"},{"id":"C","text":"Schedule management plan"},{"id":"D","text":"Resource management plan"}]},{"id":"q19","ref":"19","topic":"Plans and estimates","kind":"mcq","stem":"","ask":"Which component of the project management plan outlines the work needed to meet project objectives and deliverables?","correct":"B","explanation":"The scope management plan defines the work required to produce the objectives and deliverables.","options":[{"id":"A","text":"Cost management plan"},{"id":"B","text":"Scope management plan"},{"id":"C","text":"Resource management plan"},{"id":"D","text":"Schedule management plan"}]},{"id":"q20","ref":"20","topic":"Approaches","kind":"mcq","stem":"","ask":"Which project characteristic suggests that a predictive project management approach should be used?","correct":"B","explanation":"Predictive work fits when deliverables, requirements, and deadlines are already clear and stable.","options":[{"id":"A","text":"High levels of change and risk"},{"id":"B","text":"Defined deliverables and deadlines"},{"id":"C","text":"Evolving goals and requirements"},{"id":"D","text":"Multiple releases of product features"}]},{"id":"q21","ref":"21","topic":"Procurement and closing","kind":"mcq","stem":"","ask":"What is project procurement?","correct":"A","explanation":"Procurement is how the project obtains goods and services from outside the team.","options":[{"id":"A","text":"The purchasing of external goods and services needed to complete a project"},{"id":"B","text":"The analysis of the business requirements needed to complete a project"},{"id":"C","text":"The identification of all the funding requirements needed to complete a project"},{"id":"D","text":"The planning of all communication methods needed to complete a project"}]},{"id":"q22","ref":"22","topic":"Scope and change","kind":"mcq","stem":"","ask":"In a project, what describes work that should be included and work that should be excluded?","correct":"B","explanation":"The scope statement says what is in the project and what is out.","options":[{"id":"A","text":"Project baseline"},{"id":"B","text":"Scope statement"},{"id":"C","text":"Business case"},{"id":"D","text":"Work breakdown structure (WBS)"}]},{"id":"q23","ref":"23","topic":"Plans and estimates","kind":"mcq","stem":"You estimate this project's cost from the budget of a similar project last month.","ask":"Which type of budget estimation technique are you using?","correct":"D","explanation":"Analogous estimation uses the cost of a similar past project as the basis for the new estimate.","options":[{"id":"A","text":"Expert judgment estimation"},{"id":"B","text":"Three-point estimation"},{"id":"C","text":"Bottom-up estimation"},{"id":"D","text":"Analogous/historical estimation"}]},{"id":"q24","ref":"24","topic":"Plans and estimates","kind":"mcq","stem":"","ask":"Why should you archive project documents and processes?","correct":"C","explanation":"Archived documents are the historical record later teams use to learn from this project.","options":[{"id":"A","text":"To complete the project management plan"},{"id":"B","text":"To store all project documents on the project manager's personal computer"},{"id":"C","text":"To keep a historical record of project activities"},{"id":"D","text":"To redistribute remaining resources to other projects"}]},{"id":"q25","ref":"25","topic":"Plans and estimates","kind":"mcq","stem":"You estimate this project's cost from the budget of a similar project last month.","ask":"Which type of budget estimation technique are you using?","correct":"D","explanation":"Using last month's similar project is analogous, or historical, estimation.","options":[{"id":"A","text":"Expert judgment estimation"},{"id":"B","text":"Three-point estimation"},{"id":"C","text":"Bottom-up estimation"},{"id":"D","text":"Analogous/historical estimation"}]},{"id":"q26","ref":"26","topic":"Scope and change","kind":"mcq","stem":"You are managing a project that is experiencing significant scope creep.","ask":"What is the impact on the project?","correct":"B","explanation":"Scope creep adds unapproved work, so the project takes more time and often more money.","options":[{"id":"A","text":"The project will require fewer resources to develop."},{"id":"B","text":"The project will take additional time to complete."},{"id":"C","text":"The project will be assigned a new project manager."},{"id":"D","text":"The project will include fewer deliverables."}]},{"id":"q27","ref":"27","topic":"Approaches","kind":"match","stem":"","ask":"For each characteristic, select Predictive or Adaptive.","explanation":"Adaptive work keeps taking customer input and stays flexible. Predictive work follows the plan created up front.","choices":["Predictive","Adaptive"],"left":[{"id":"p0","text":"Reliance on customer input throughout the project","answer":"Adaptive"},{"id":"p1","text":"Increased flexibility to make project adjustments","answer":"Adaptive"},{"id":"p2","text":"Completion of the project according to the plan created at the beginning","answer":"Predictive"}]},{"id":"q28","ref":"28","topic":"Procurement and closing","kind":"mcq","stem":"","ask":"What is a vendor?","correct":"B","explanation":"A vendor is an outside supplier of goods or services the project needs.","options":[{"id":"A","text":"A business analyst who works with the finance team for a project"},{"id":"B","text":"An external supplier who provides goods or services to a project"},{"id":"C","text":"A procurement team member who negotiates contracts for a project"},{"id":"D","text":"An experienced business professional who can sell the final product"}]},{"id":"q29","ref":"29","topic":"Fundamentals","kind":"mcq","stem":"","ask":"As a project manager, what information do you need to include in a status update to your boss?","correct":"A","explanation":"A status update reports progress: the work that has been completed, along with how the project is doing.","options":[{"id":"A","text":"Project work that has been completed"},{"id":"B","text":"A list of project stakeholders"},{"id":"C","text":"Project goals and objectives"},{"id":"D","text":"A description of the project scope"}]},{"id":"q30","ref":"30","topic":"Approaches","kind":"mcq","stem":"Your team uses an agile delivery method. Your manager asks you to review the prioritized list of deliverables before a meeting.","ask":"What should you review?","correct":"B","explanation":"In Agile, the prioritized list of deliverables is the product backlog.","options":[{"id":"A","text":"Kanban board"},{"id":"B","text":"Backlog"},{"id":"C","text":"User story"},{"id":"D","text":"Work breakdown structure (WBS)"}]},{"id":"q31","ref":"31","topic":"People and ethics","kind":"mcq","stem":"","ask":"As a project manager, how should you encourage your team to be focused, energized, and positive for the duration of a project?","correct":"A","explanation":"People are motivated by different things. Learn what matters to each person and use that.","options":[{"id":"A","text":"Discover what personally motivates each team member."},{"id":"B","text":"Report poor behavior to upper management."},{"id":"C","text":"Give each team member the authority to change project deadlines."},{"id":"D","text":"Rank team members' performance during team meetings."}]},{"id":"q32","ref":"32","topic":"Fundamentals","kind":"mcq","stem":"","ask":"What is the primary goal of creating a work breakdown structure (WBS)?","correct":"C","explanation":"A WBS breaks the project into smaller pieces of work that can be assigned and managed. It does not, by itself, assign people.","options":[{"id":"A","text":"To prepare an organizational chart for the project team members"},{"id":"B","text":"To describe the key stakeholders and their roles in the project"},{"id":"C","text":"To decompose the project work into assignable work activities"},{"id":"D","text":"To determine which team members will be responsible for each project activity"}]},{"id":"q33","ref":"33","topic":"People and ethics","kind":"mcq","stem":"","ask":"Who is responsible for overseeing the daily activities of a project from start to finish?","correct":"A","explanation":"The project manager coordinates planning, execution, and day-to-day monitoring from start to finish.","options":[{"id":"A","text":"Project manager"},{"id":"B","text":"Client"},{"id":"C","text":"Vendor"},{"id":"D","text":"Sponsor"}]},{"id":"q34","ref":"34","topic":"People and ethics","kind":"mcq","stem":"The team is arguing about the start date of an important task. The project sponsor intervenes and sets the start date.","ask":"Which type of conflict resolution technique is the project sponsor using?","correct":"C","explanation":"The sponsor used authority to impose the start date. Imposing a decision is forcing.","options":[{"id":"A","text":"Avoiding"},{"id":"B","text":"Smoothing"},{"id":"C","text":"Forcing"},{"id":"D","text":"Collaborating"}]},{"id":"q35","ref":"35","topic":"People and ethics","kind":"mcq","stem":"You are reviewing bakeries for a town festival. Your favorite aunt owns one of them, and no one else on the team knows.","ask":"According to project management ethical guidelines, what should you do?","correct":"D","explanation":"A family business on the vendor list is a conflict of interest. Disclose it to your supervisor so the selection stays transparent.","options":[{"id":"A","text":"Tell your aunt to lower her prices so that she can be easily selected for the event."},{"id":"B","text":"Inform your aunt that she will need to remove her bakery from the selection list."},{"id":"C","text":"Proceed with the selection process, confident that you will act fairly."},{"id":"D","text":"Notify your supervisor that your aunt's bakery is on the list."}]},{"id":"q36","ref":"36","topic":"Scope and change","kind":"mcq","stem":"","ask":"What is the purpose of following a change management process?","correct":"A","explanation":"Change management records the requested change and its impact so the project is modified only in a controlled way.","options":[{"id":"A","text":"To document a change in scope and any impact to the project"},{"id":"B","text":"To delay a new feature request so the customer will reconsider any changes"},{"id":"C","text":"To inform the customer that your team takes their suggested product changes seriously"},{"id":"D","text":"To show the project sponsor that you follow correct procedures"}]},{"id":"q37","ref":"37","topic":"Approaches","kind":"mcq","stem":"","ask":"As a project manager, which activity should you perform when using a predictive project management approach?","correct":"A","explanation":"Predictive projects plan the work in detail before execution. Sprints, backlogs, and iteration reviews belong to adaptive delivery.","options":[{"id":"A","text":"Create a detailed project plan that includes all of the project activities."},{"id":"B","text":"Begin the current sprint before planning for the next one."},{"id":"C","text":"View the backlog to determine the next planning activity required."},{"id":"D","text":"Review deliverables after each iteration with the customer."}]},{"id":"q38","ref":"38","topic":"Procurement and closing","kind":"mcq","stem":"A community center director hires your team to build a playground for families in the community.","ask":"Upon completion of the playground, who is responsible for the final acceptance of the project?","correct":"A","explanation":"The client accepts the finished deliverable. Here that is the community center director who hired the team.","options":[{"id":"A","text":"The director (your client)"},{"id":"B","text":"The project team"},{"id":"C","text":"The families in the community"},{"id":"D","text":"The project manager (you)"}]},{"id":"q39","ref":"39","topic":"Procurement and closing","kind":"mcq","stem":"An external supplier delivered a tool for the development phase. The team finds it acceptable and is using it.","ask":"Why should you now close the contract with the supplier?","correct":"C","explanation":"Once the team accepts the tool, closing the contract confirms the work is done and lets the supplier be paid.","options":[{"id":"A","text":"To inform the procurement team that the new tool has been delivered"},{"id":"B","text":"To prevent the supplier from contacting team members for payment"},{"id":"C","text":"To request that the supplier be paid for the delivery of the tool"},{"id":"D","text":"To thank the supplier for delivering the tool according to the contract"}]},{"id":"q40","ref":"40","topic":"Approaches","kind":"mcq","stem":"Every new project starts with a design stage: create a design, test it, update it, retest, then lock a final design. After that, the team builds and follows a detailed plan for the remaining deliverables.","ask":"Which project management approach are they using?","correct":"A","explanation":"Iterative design, test, and redesign, followed by a detailed plan for the remaining work, combines adaptive and predictive practices. That is hybrid.","options":[{"id":"A","text":"Hybrid"},{"id":"B","text":"Predictive"},{"id":"C","text":"Scrum"},{"id":"D","text":"Adaptive"}]},{"id":"q41","ref":"41","topic":"Scope and change","kind":"order","stem":"You received a request to add a new scope item and need to follow the change management process.","ask":"Place the four change management actions in the order you should perform them.","explanation":"Identify the change, assess its impact, approve or deny it, then implement it only if it was approved.","steps":[{"id":"s0","text":"Identify the change"},{"id":"s1","text":"Assess the change impact"},{"id":"s2","text":"Approve or deny the change"},{"id":"s3","text":"Implement the approved change"}],"initial":["s3","s1","s0","s2"]},{"id":"q42","ref":"42","topic":"Scope and change","kind":"mcq","stem":"You manage an interior design project. The floor tiles in the original plan are no longer available.","ask":"Who has the authority to choose a new style for the replacement tiles?","correct":"D","explanation":"The customer decides on a design change that affects the deliverable they will accept. The original tiles were part of what they selected.","options":[{"id":"A","text":"The project team"},{"id":"B","text":"The business analyst"},{"id":"C","text":"The project manager"},{"id":"D","text":"The customer"}]},{"id":"q43","ref":"43","topic":"Approaches","kind":"mcq","stem":"","ask":"How does an adaptive project management approach engage customers?","correct":"C","explanation":"Adaptive delivery depends on customers giving feedback throughout the work, not only at the end.","options":[{"id":"A","text":"It encourages customers to contribute to the lessons learned process."},{"id":"B","text":"It encourages customers to complete sections of the project management plan."},{"id":"C","text":"It encourages customers to provide continuous feedback."},{"id":"D","text":"It encourages customers to complete tasks on the project backlog."}]},{"id":"q44","ref":"44","topic":"Fundamentals","kind":"mcq","stem":"","ask":"Why is quality assurance included in the project development process?","correct":"C","explanation":"Quality assurance is included so the work meets the specifications and requirements. It is not a budget, staffing, or motivation control.","options":[{"id":"A","text":"To evaluate the performance of new employees"},{"id":"B","text":"To motivate project team members to complete project milestones on time"},{"id":"C","text":"To ensure products meet specifications and requirements"},{"id":"D","text":"To verify that project expenses remain under baseline budgets"}]},{"id":"q45","ref":"45","topic":"Approaches","kind":"mcq","stem":"You are working with new technologies and processes. The scope is unclear. The client wants to be informed and involved in all phases. The team is highly qualified and motivated. The project requires a significant amount of testing and retesting.","ask":"Which project management approach should you choose?","correct":"A","explanation":"Unclear scope, new technology, heavy testing and retesting, and a client who wants to be involved throughout all point to an adaptive approach.","options":[{"id":"A","text":"Adaptive"},{"id":"B","text":"Predictive"},{"id":"C","text":"Hybrid"},{"id":"D","text":"Critical path"}]},{"id":"q46","ref":"46","topic":"Plans and estimates","kind":"mcq","stem":"While working on the current project, the team learned a new way to manage project resources.","ask":"What is a benefit of reporting this new approach in the lessons learned documentation?","correct":"A","explanation":"Lessons learned spread a useful new method to other teams in the organization.","options":[{"id":"A","text":"To inform other teams of the new approach"},{"id":"B","text":"To inform the legal team of the new approach"},{"id":"C","text":"To inform competitors of the new approach"},{"id":"D","text":"To inform the client of the new approach"}]},{"id":"q47","ref":"47","topic":"Procurement and closing","kind":"mcq","stem":"","ask":"What is a vendor?","correct":"C","explanation":"A vendor is an external supplier of goods or services. A procurement teammate who negotiates contracts is not the vendor.","options":[{"id":"A","text":"A procurement team member who negotiates contracts for a project"},{"id":"B","text":"An experienced business professional who can sell the final product"},{"id":"C","text":"An external supplier who provides goods or services to a project"},{"id":"D","text":"A business analyst who works with the finance team for a project"}]},{"id":"q48","ref":"48","topic":"People and ethics","kind":"mcq","stem":"At a team meeting, the sponsor says the customer is worried the software will not perform reliably.","ask":"As the project manager, how should you respond?","correct":"C","explanation":"Go to the customer and learn what the concern is based on before you promise a fix or dismiss it.","options":[{"id":"A","text":"Ask the engineering team to increase software reliability."},{"id":"B","text":"Email the customer to inform them reliability will be addressed at the end of the project."},{"id":"C","text":"Meet with the customer to understand the basis of their concerns."},{"id":"D","text":"Inform the project sponsor that the customer is using old performance data."}]},{"id":"q49","ref":"49","topic":"People and ethics","kind":"mcq","stem":"","ask":"In a project, who has the highest level of authority to make project decisions such as changes to the project scope, schedule, or budget?","correct":"B","explanation":"The sponsor has the highest authority over major changes to scope, schedule, and budget.","options":[{"id":"A","text":"The business analyst"},{"id":"B","text":"The sponsor"},{"id":"C","text":"The quality assurance manager"},{"id":"D","text":"The project manager"}]},{"id":"q50","ref":"50","topic":"Plans and estimates","kind":"mcq","stem":"You are creating a budget by calculating the cost of each activity in the project.","ask":"Which method of budget development are you using?","correct":"D","explanation":"Bottom-up estimating costs each activity, then adds those costs to get the project budget.","options":[{"id":"A","text":"Three-point estimate"},{"id":"B","text":"Analogous/historical comparison"},{"id":"C","text":"Top-down"},{"id":"D","text":"Bottom-up"}]},{"id":"q51","ref":"51","topic":"Plans and estimates","kind":"mcq","stem":"During the project, the team develops new procedures that create certain product features more efficiently.","ask":"Why should the team archive the project documents and new procedures?","correct":"B","explanation":"Archive the new procedures so teams on similar future projects can reuse them.","options":[{"id":"A","text":"To show the sponsor the efficiency of the team"},{"id":"B","text":"To provide reference material for teams working on similar projects"},{"id":"C","text":"To identify the employees that discovered the new procedures"},{"id":"D","text":"To receive recognition for developing new procedures"}]},{"id":"q52","ref":"52","topic":"Scope and change","kind":"mcq","stem":"","ask":"What describes a project's requirements, including major deliverables and exclusions of the project?","correct":"A","explanation":"The scope statement describes requirements, major deliverables, and what is excluded.","options":[{"id":"A","text":"Scope statement"},{"id":"B","text":"Status report"},{"id":"C","text":"Work breakdown structure"},{"id":"D","text":"Business case"}]},{"id":"q53","ref":"53","topic":"Scope and change","kind":"mcq","stem":"You are managing a project that is experiencing significant scope creep.","ask":"What is the impact on the project?","correct":"D","explanation":"Significant scope creep adds work, so the project takes more time to finish.","options":[{"id":"A","text":"The project will require fewer resources to develop."},{"id":"B","text":"The project will be assigned a new project manager."},{"id":"C","text":"The project will include fewer deliverables."},{"id":"D","text":"The project will take additional time to complete."}]},{"id":"q54","ref":"54","topic":"People and ethics","kind":"mcq","stem":"Everyone on the team signed an NDA. You witness a team member talking about the project to someone outside the team.","ask":"According to project management ethical guidelines, what should you do?","correct":"C","explanation":"You saw a specific breach of the NDA. Tell the project manager so it can be handled. A general reminder does not address what already happened.","options":[{"id":"A","text":"Send an email to all employees with the definition of non-disclosure."},{"id":"B","text":"Let the project manager discover and take care of the issue."},{"id":"C","text":"Bring the situation to the attention of the project manager."},{"id":"D","text":"Remind the team about the importance of keeping project details confidential."}]},{"id":"q55","ref":"55","topic":"Procurement and closing","kind":"mcq","stem":"","ask":"Which action signifies the formal acceptance of the final product?","correct":"B","explanation":"The sponsor and customer formally accept the product when it meets the requirements. Contract closure and paperwork come after that.","options":[{"id":"A","text":"Closing of vendor contracts by the project team"},{"id":"B","text":"Approval by the project sponsor and customer"},{"id":"C","text":"Final budget approval by the project manager"},{"id":"D","text":"Completion of all paperwork by the project manager"}]},{"id":"q56","ref":"56","topic":"Scope and change","kind":"mcq","stem":"You are developing a new app. A team member suggests a feature and says the feature is out of scope.","ask":"What should you do if a product feature is out of scope?","correct":"D","explanation":"Decline work that is outside the approved scope unless it goes through change management.","options":[{"id":"A","text":"You should develop the feature as part of the project."},{"id":"B","text":"You should add the feature to the scope statement."},{"id":"C","text":"You should consider the feature a project dependency."},{"id":"D","text":"You should decline the development of the feature."}]},{"id":"q57","ref":"57","topic":"Fundamentals","kind":"mcq","stem":"","ask":"Which document is issued by the project sponsors to formally authorize the existence of a project and is the starting point for initial project planning?","correct":"C","explanation":"Sponsors issue the project charter to authorize the project. It is the starting point for initial planning and names the project manager's authority.","options":[{"id":"A","text":"Procurement contract"},{"id":"B","text":"Scope statement"},{"id":"C","text":"Project charter"},{"id":"D","text":"Project management plan"}]},{"id":"q58","ref":"58","topic":"Fundamentals","kind":"mcq","stem":"","ask":"What is a dependency?","correct":"C","explanation":"A dependency is a relationship between tasks, such as one task that cannot start until another finishes.","options":[{"id":"A","text":"The difference between the estimated and the actual length of a task"},{"id":"B","text":"An accidental change in project requirements"},{"id":"C","text":"A relationship between two or more tasks"},{"id":"D","text":"The work needed to complete the project"}]},{"id":"q59","ref":"59","topic":"People and ethics","kind":"mcq","stem":"You are planning a wedding. The couple often disagrees about colors and styles. When you get involved, the disagreement gets worse, so you give them time to talk. Eventually they agree on a joint decision.","ask":"Which conflict resolution technique are you using?","correct":"A","explanation":"You stepped back and let them resolve it. Withdrawal, also called avoidance, is leaving the conflict for a time.","options":[{"id":"A","text":"Withdrawal"},{"id":"B","text":"Collaborating"},{"id":"C","text":"Compromising"},{"id":"D","text":"Forcing"}]},{"id":"q60","ref":"60","topic":"People and ethics","kind":"mcq","stem":"Your project manager assigns you a festival map of games, rides, and vendors. You want to pull another team member off their task to help, which would cut your time in half.","ask":"What responsibility and authority do you have regarding your assigned task?","correct":"B","explanation":"You cannot take another person off their assigned work on your own. The project manager controls that assignment.","options":[{"id":"A","text":"You need to promise your team member that you will help them after they help you."},{"id":"B","text":"You need to get approval from the project manager before asking for help."},{"id":"C","text":"You can reassign tasks as long as both tasks are completed on time."},{"id":"D","text":"You can use your team member's help as long as you complete your assigned task faster."}]},{"id":"q61","ref":"61","topic":"Scope and change","kind":"mcq","stem":"You are coordinating an event and reviewing status with the customer. While looking at the invitations, the customer requests a change in the design work.","ask":"Which stage of the change management process does this represent?","correct":"B","explanation":"The customer has just requested a design change. The first step is to identify and document that request before assessing or approving it.","options":[{"id":"A","text":"Implement the approved change"},{"id":"B","text":"Identify the change"},{"id":"C","text":"Assess the change impact"},{"id":"D","text":"Approve the change"}]},{"id":"q62","ref":"62","topic":"Fundamentals","kind":"mcq","stem":"","ask":"What is a deliverable?","correct":"A","explanation":"A deliverable is a product, service, or result the project produces, such as software, a report, a prototype, or a physical product.","options":[{"id":"A","text":"A result created as an outcome of a project"},{"id":"B","text":"A task that leads to a larger outcome"},{"id":"C","text":"An organized list of activities"},{"id":"D","text":"A set of resources needed to accomplish an activity"}]},{"id":"q63","ref":"63","topic":"Approaches","kind":"mcq","stem":"","ask":"Which project characteristic suggests that a predictive project management approach should be used?","correct":"C","explanation":"Predictive delivery is a fit when deliverables and deadlines are defined at the start.","options":[{"id":"A","text":"Multiple releases of product features"},{"id":"B","text":"High levels of change and risk"},{"id":"C","text":"Defined deliverables and deadlines"},{"id":"D","text":"Evolving goals and requirements"}]},{"id":"q64","ref":"64","topic":"People and ethics","kind":"mcq","stem":"The team is missing deadlines. The project manager meets each person, then offers a paid bonus to three, extra time off to two, and remote work to the other two if they finish on time.","ask":"Why did the project manager decide to provide the team members with different perks?","correct":"B","explanation":"After meeting each person, the project manager matched the perk to that person: bonus, time off, or remote work. Motivation is individual.","options":[{"id":"A","text":"The project manager wanted to reward the team with something fun."},{"id":"B","text":"The project manager discovered how to motivate each team member individually."},{"id":"C","text":"The project manager had additional budget that needed to be spent."},{"id":"D","text":"The project manager hoped that random perks would inspire the team to work harder."}]},{"id":"q65","ref":"65","topic":"Scope and change","kind":"mcq","stem":"","ask":"What impact does gold plating have on a project?","correct":"B","explanation":"Gold plating adds unrequested features. Scope grows, and cost and time usually grow with it, without stakeholder approval.","options":[{"id":"A","text":"The scope increases and the cost to the customer remains the same."},{"id":"B","text":"The scope increases and the cost to the customer increases."},{"id":"C","text":"The scope remains the same and the cost to the customer decreases."},{"id":"D","text":"The scope remains the same and the cost to the customer increases."}]},{"id":"q66","ref":"66","topic":"Approaches","kind":"match","stem":"","ask":"For each project description, select Adaptive or Predictive.","explanation":"Sprints and a flexible end result are adaptive. Clear deliverables, fixed deadlines, and close adherence to the original plan are predictive.","choices":["Predictive","Adaptive"],"left":[{"id":"p0","text":"The project is executed in sprints.","answer":"Adaptive"},{"id":"p1","text":"The client is flexible about what the end deliverable will look like.","answer":"Adaptive"},{"id":"p2","text":"The project has clear deliverables, specific deadlines, and follows the project management plan closely.","answer":"Predictive"}]},{"id":"q67","ref":"67","topic":"Plans and estimates","kind":"mcq","stem":"","ask":"What is a purpose of including a schedule in the project management plan?","correct":"A","explanation":"The schedule communicates when activities, milestones, and deliverables are due.","options":[{"id":"A","text":"To communicate project deliverable deadlines"},{"id":"B","text":"To obtain management support for the project"},{"id":"C","text":"To evaluate the work performance of the team"},{"id":"D","text":"To assign team members to different activities"}]},{"id":"q68","ref":"68","topic":"People and ethics","kind":"mcq","stem":"","ask":"Who is responsible for completing project deliverables?","correct":"D","explanation":"The project manager oversees the work. Team members complete the deliverables.","options":[{"id":"A","text":"Sponsors"},{"id":"B","text":"Product managers"},{"id":"C","text":"Business analysts"},{"id":"D","text":"Team members"}]},{"id":"q69","ref":"69","topic":"Procurement and closing","kind":"mcq","stem":"","ask":"What is project procurement?","correct":"D","explanation":"Procurement is purchasing the external goods and services the project needs.","options":[{"id":"A","text":"The planning of all communication methods needed to complete a project"},{"id":"B","text":"The identification of all the funding requirements needed to complete a project"},{"id":"C","text":"The analysis of the business requirements needed to complete a project"},{"id":"D","text":"The purchasing of external goods and services needed to complete a project"}]},{"id":"q70","ref":"70","topic":"Fundamentals","kind":"mcq","stem":"","ask":"What should you include in the project purpose section of the project charter?","correct":"A","explanation":"The purpose section explains the business need: why the project exists and what problem or opportunity it addresses.","options":[{"id":"A","text":"A description of the business need"},{"id":"B","text":"An outline of the key points in time in the project"},{"id":"C","text":"A list of key milestones"},{"id":"D","text":"A statement describing the expected deliverables"}]},{"id":"q71","ref":"71","topic":"Fundamentals","kind":"mcq","stem":"You give your boss work planned versus work completed, budget planned versus budget spent, and issues or roadblocks.","ask":"Which type of communication are you providing?","correct":"D","explanation":"Work planned versus completed, budget planned versus spent, and issues or roadblocks are the contents of a status update.","options":[{"id":"A","text":"A contingency plan"},{"id":"B","text":"A business plan"},{"id":"C","text":"A project charter"},{"id":"D","text":"A status update"}]},{"id":"q72","ref":"72","topic":"Scope and change","kind":"mcq","stem":"","ask":"Which statement describes the main purpose of using a change management process?","correct":"C","explanation":"Change management documents each modification and gets it formally approved so scope does not change in an uncontrolled way.","options":[{"id":"A","text":"To list project scope requirements and create an initial scope baseline"},{"id":"B","text":"To discuss new requirements and have customers add them to the work breakdown structure (WBS)"},{"id":"C","text":"To document all modifications and formalize their approval"},{"id":"D","text":"To identify new stakeholders and add them to the stakeholder register"}]},{"id":"q73","ref":"73","topic":"Plans and estimates","kind":"mcq","stem":"You are the project manager for a bicycle race and discover that nearby road construction may interfere with the race path.","ask":"Which part of the project management plan should you update?","correct":"B","explanation":"Nearby road construction that may block the race route is a risk. Update the risk information in the plan.","options":[{"id":"A","text":"Schedule"},{"id":"B","text":"Risk"},{"id":"C","text":"Cost"},{"id":"D","text":"Resource"}]},{"id":"q74","ref":"74","topic":"Approaches","kind":"mcq","stem":"","ask":"Which statement describes a characteristic of a predictive project management approach?","correct":"A","explanation":"Predictive projects finish detailed planning for the whole scope before execution. Short-cycle planning is adaptive.","options":[{"id":"A","text":"Planning is completed for the entire scope of the project at the beginning."},{"id":"B","text":"Planning is completed for deliverables needed in the next two weeks."},{"id":"C","text":"Planning is completed in short increments as part of a cycle."},{"id":"D","text":"Planning is completed annually as part of a company finance cycle."}]},{"id":"q75","ref":"75","topic":"Procurement and closing","kind":"mcq","stem":"","ask":"Why is contract closure an important element of project closing?","correct":"A","explanation":"Contract closure confirms the vendor completed the work as specified before the contract is closed and final payment is made.","options":[{"id":"A","text":"It ensures that the work described in the contract was completed as specified"},{"id":"B","text":"It ensures that workers can no longer access project materials."},{"id":"C","text":"It ensures that the project management plan is updated with contract completion status."},{"id":"D","text":"It ensures that the project budget has enough money to cover the expenses."}]},{"id":"q76","ref":"76","topic":"Fundamentals","kind":"order","stem":"","ask":"Place the project life cycle phases in the correct order.","explanation":"The life cycle runs from initiating, to organizing and preparing, to carrying out the work, to ending the project.","steps":[{"id":"s0","text":"Initiating the project"},{"id":"s1","text":"Organizing and preparing"},{"id":"s2","text":"Carrying out the work"},{"id":"s3","text":"Ending the project"}],"initial":["s2","s0","s3","s1"]},{"id":"q78","ref":"77-78","topic":"Approaches","kind":"mcq","stem":"A new product has software and hardware. The software will be developed in sprints. The hardware prototype will follow the specifications in the project management plan with minimal customer feedback.","ask":"Which type of project management approach does this scenario describe?","correct":"A","explanation":"Software built in sprints is adaptive. Hardware built to a fixed specification with little customer feedback is predictive. Using both is hybrid.","options":[{"id":"A","text":"Hybrid"},{"id":"B","text":"Incremental"},{"id":"C","text":"Adaptive"},{"id":"D","text":"Predictive"}]},{"id":"q79","ref":"79","topic":"Scope and change","kind":"mcq","stem":"You are coordinating construction of a house. During a progress review, the customer sees that the installed kitchen cabinets do not match the cabinets selected in the scope.","ask":"What should you do to resolve the scope variance?","correct":"C","explanation":"The installed cabinets do not match the agreed scope. Discuss the options with the customer and get approval before you act.","options":[{"id":"A","text":"Contact the cabinet maker to order the right cabinets, regardless of the impact on the schedule and cost."},{"id":"B","text":"Require the customer to accept the house as-is and give them a discount on the house price."},{"id":"C","text":"Discuss options with the customer to correct the issue and gain their approval on the course of action."},{"id":"D","text":"Communicate with the customer that the project will be over budget with any additional changes and their house price will increase."}]},{"id":"q80","ref":"80","topic":"Scope and change","kind":"match","stem":"You are managing a house painting project.","ask":"Match each scenario to the change management step it describes.","explanation":"Need is identified, the cost estimate assesses impact, the sponsor's instruction approves the buy, and delivery implements the approved change.","choices":["Implement the approved change","Identify the change","Approve the change","Assess the change impact"],"left":[{"id":"p0","text":"You request a cost estimate for 15 gallons of paint.","answer":"Assess the change impact"},{"id":"p1","text":"15 gallons of paint are delivered to the construction site.","answer":"Implement the approved change"},{"id":"p2","text":"The sponsor tells the purchasing manager to buy 15 gallons of additional paint.","answer":"Approve the change"},{"id":"p3","text":"The construction manager informs you that the team will need an additional 15 gallons of paint.","answer":"Identify the change"}]},{"id":"q81","ref":"81","topic":"Procurement and closing","kind":"mcq","stem":"","ask":"Why is contract closure an important element of project closing?","correct":"C","explanation":"Closing the contract verifies that the contracted work was completed as specified.","options":[{"id":"A","text":"It ensures that the project budget has enough money to cover the expenses."},{"id":"B","text":"It ensures that workers can no longer access project materials."},{"id":"C","text":"It ensures that the work described in the contract was completed as specified."},{"id":"D","text":"It ensures that the project management plan is updated with contract completion status."}]},{"id":"q82","ref":"82","topic":"Fundamentals","kind":"mcq","stem":"","ask":"What is the purpose of a work breakdown structure (WBS)?","correct":"B","explanation":"The WBS identifies the work, broken into activities needed to complete the project.","options":[{"id":"A","text":"To identify all the stakeholders impacted by a project"},{"id":"B","text":"To identify all the activities needed to complete a project"},{"id":"C","text":"To identify all the communication methods needed for a project"},{"id":"D","text":"To identify all the roles and responsibilities in a project"}]},{"id":"q83","ref":"83","topic":"Fundamentals","kind":"order","stem":"","ask":"Place the project life cycle phases in the correct order.","explanation":"Initiate, then organize and prepare, then carry out the work, then end the project.","steps":[{"id":"s0","text":"Initiating the project"},{"id":"s1","text":"Organizing and preparing"},{"id":"s2","text":"Carrying out the work"},{"id":"s3","text":"Ending the project"}],"initial":["s3","s2","s0","s1"]},{"id":"q84","ref":"84","topic":"Approaches","kind":"mcq","stem":"","ask":"Which project characteristic suggests that a predictive project management approach should be used?","correct":"C","explanation":"Defined deliverables and deadlines support a predictive approach. High change, evolving goals, and many releases do not.","options":[{"id":"A","text":"High levels of change and risk"},{"id":"B","text":"Evolving goals and requirements"},{"id":"C","text":"Defined deliverables and deadlines"},{"id":"D","text":"Multiple releases of product features"}]},{"id":"q85","ref":"85","topic":"People and ethics","kind":"mcq","stem":"","ask":"In a project, who has the highest level of authority to make project decisions such as changes to the project scope, schedule, or budget?","correct":"D","explanation":"The sponsor holds the highest authority for changes to scope, schedule, or budget.","options":[{"id":"A","text":"The project manager"},{"id":"B","text":"The business analyst"},{"id":"C","text":"The quality assurance manager"},{"id":"D","text":"The sponsor"}]},{"id":"q86","ref":"86","topic":"Approaches","kind":"mcq","stem":"","ask":"In an adaptive project management approach, which statement describes the actions of team members?","correct":"A","explanation":"In an adaptive approach, the team pulls the highest-priority backlog items into the current iteration.","options":[{"id":"A","text":"They work on the highest priority items in the product backlog."},{"id":"B","text":"They work through all the tasks sequentially to complete the final product."},{"id":"C","text":"They gather all customer requirements at the beginning of the project."},{"id":"D","text":"They take turns leading the project so they can each gain experience in leadership."}]},{"id":"q87","ref":"87","topic":"Fundamentals","kind":"mcq","stem":"","ask":"Which document is issued by the project sponsors to formally authorize the existence of a project and is the starting point for initial project planning?","correct":"A","explanation":"The project charter is the sponsor's authorization to start the project and begin initial planning.","options":[{"id":"A","text":"Project charter"},{"id":"B","text":"Procurement contract"},{"id":"C","text":"Project management plan"},{"id":"D","text":"Scope statement"}]}];
+const KEY = "pm-reviewer-exam-v1";
+const TOPICS = ["Fundamentals","Scope and change","Approaches","Plans and estimates","People and ethics","Procurement and closing"];
+
+function emptyState() {
+  return { index: 0, topic: "All", retryIds: [], answers: {}, matches: {}, orders: {}, revealed: {} };
+}
+function load() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (!saved || typeof saved !== "object") return emptyState();
+    return Object.assign(emptyState(), saved);
+  } catch (e) {
+    return emptyState();
+  }
+}
+let state = load();
+let nudge = "";
+let lastId = "";
+
+function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[ch]));
+}
+function isCorrect(q) {
+  if (q.kind === "mcq") return state.answers[q.id] === q.correct;
+  if (q.kind === "match") {
+    const picked = state.matches[q.id] || {};
+    return q.left.every((item) => picked[item.id] === item.answer);
+  }
+  const order = state.orders[q.id] || q.initial;
+  return q.steps.every((step, i) => order[i] === step.id);
+}
+function isAttempted(q) {
+  if (q.kind === "mcq") return Boolean(state.answers[q.id]);
+  if (q.kind === "match") {
+    const picked = state.matches[q.id] || {};
+    return q.left.every((item) => Boolean(picked[item.id]));
+  }
+  return true;
+}
+function filtered() {
+  if (state.topic === "All") return QUESTIONS;
+  if (state.topic === "Unanswered") return QUESTIONS.filter((q) => !state.revealed[q.id]);
+  if (state.topic === "Missed") return QUESTIONS.filter((q) => state.revealed[q.id] && !isCorrect(q));
+  if (state.topic === "Retry") return QUESTIONS.filter((q) => state.retryIds.indexOf(q.id) >= 0);
+  return QUESTIONS.filter((q) => q.topic === state.topic);
+}
+function answerLine(q) {
+  if (q.kind === "mcq") {
+    const text = (q.options.find((option) => option.id === q.correct) || {}).text || "";
+    return "The answer is " + q.correct + ". " + text;
+  }
+  if (q.kind === "match") return q.left.map((item) => item.text + ": " + item.answer).join(" · ");
+  return q.steps.map((step, i) => (i + 1) + ". " + step.text).join(" · ");
+}
+function counts() {
+  let checked = 0, correct = 0, missed = 0;
+  QUESTIONS.forEach((q) => {
+    if (!state.revealed[q.id]) return;
+    checked += 1;
+    if (isCorrect(q)) correct += 1;
+    else missed += 1;
+  });
+  return { checked, correct, missed };
+}
+function render() {
+  save();
+  const list = filtered();
+  const index = list.length === 0 ? 0 : Math.min(state.index, list.length - 1);
+  const current = list[index];
+  const tally = counts();
+  const pct = tally.checked ? Math.round((tally.correct / tally.checked) * 100) : 0;
+  document.getElementById("stats").innerHTML =
+    "<span><strong>" + tally.checked + "/" + QUESTIONS.length + "</strong> checked</span>" +
+    "<span><strong>" + tally.correct + "</strong> correct</span>" +
+    "<span><strong>" + tally.missed + "</strong> missed</span>" +
+    "<span><strong>" + (tally.checked ? pct + "%" : "—") + "</strong></span>";
+  const okWidth = QUESTIONS.length ? (tally.correct / QUESTIONS.length) * 100 : 0;
+  const noWidth = QUESTIONS.length ? (tally.missed / QUESTIONS.length) * 100 : 0;
+  document.getElementById("bar").innerHTML =
+    '<span class="ok" style="width:' + okWidth + '%"></span><span class="no" style="width:' + noWidth + '%"></span>';
+
+  const filters = ["All", "Unanswered", "Missed"].concat(TOPICS);
+  if (state.retryIds.length) filters.push("Retry");
+  const filterHtml = '<label class="field">Show<select id="filter">' +
+    filters.map((name) => '<option value="' + esc(name) + '"' + (name === state.topic ? " selected" : "") + ">" + esc(name) + "</option>").join("") +
+    "</select></label>";
+
+  let body = "";
+  if (!current) {
+    const title = state.topic === "Missed" ? "No missed items" : state.topic === "Unanswered" ? "Every item has been checked" : "Nothing in this view";
+    const text = state.topic === "Missed"
+      ? "Either nothing is checked yet, or every checked item is correct."
+      : "Switch the list above back to All.";
+    body = '<div class="callout good"><strong>' + title + '</strong>' + text + '</div>';
+  } else {
+    const revealed = Boolean(state.revealed[current.id]);
+    const ok = isCorrect(current);
+    body += '<p class="meta">Question ' + (index + 1) + ' of ' + list.length + ' · Reviewer item ' + esc(current.ref) + ' · ' + esc(current.topic) + '</p>';
+    if (current.stem) body += '<p class="stem">' + esc(current.stem) + '</p>';
+    body += '<h2>' + esc(current.ask) + '</h2>';
+    if (current.kind === "mcq") {
+      current.options.forEach((option) => {
+        const selected = state.answers[current.id] === option.id;
+        let cls = "choice";
+        if (revealed && option.id === current.correct) cls += " correct";
+        else if (revealed && selected) cls += " wrong";
+        else if (selected) cls += " selected";
+        body += '<button type="button" class="' + cls + '" data-pick="' + option.id + '"><span class="letter">' + option.id + '.</span>' + esc(option.text) + '</button>';
+      });
+    } else if (current.kind === "match") {
+      const picked = state.matches[current.id] || {};
+      current.left.forEach((item) => {
+        const value = picked[item.id] || "";
+        const right = revealed && value === item.answer;
+        const wrong = revealed && value !== item.answer;
+        body += '<div class="match"><p>' + esc(item.text) + '</p><select class="' + (right ? "correct" : wrong ? "wrong" : "") + '" data-match="' + item.id + '"' + (revealed ? " disabled" : "") + '>';
+        body += '<option value="">Select a match</option>';
+        current.choices.forEach((choice) => {
+          body += '<option value="' + esc(choice) + '"' + (value === choice ? " selected" : "") + '>' + esc(choice) + '</option>';
+        });
+        body += '</select>';
+        if (wrong) body += '<p class="note">Correct match: ' + esc(item.answer) + '</p>';
+        body += '</div>';
+      });
+    } else {
+      const order = state.orders[current.id] || current.initial;
+      body += '<p class="note">Arrange these from first to last. If you leave this order, Check grades it as shown.</p>';
+      order.forEach((stepId, stepIndex) => {
+        const step = current.steps.find((item) => item.id === stepId);
+        const inPlace = revealed && current.steps[stepIndex].id === stepId;
+        body += '<div class="order-row ' + (revealed ? (inPlace ? "correct" : "wrong") : "") + '"><strong>' + (stepIndex + 1) + '</strong><p>' + esc(step.text) + '</p>';
+        body += '<button type="button" class="mini" data-move="-1" data-at="' + stepIndex + '"' + (revealed || stepIndex === 0 ? " disabled" : "") + '>Up</button>';
+        body += '<button type="button" class="mini" data-move="1" data-at="' + stepIndex + '"' + (revealed || stepIndex === order.length - 1 ? " disabled" : "") + '>Down</button></div>';
+      });
+    }
+    if (nudge) body += '<div class="callout warn"><strong>Not ready to check</strong>' + esc(nudge) + '</div>';
+    if (revealed) {
+      body += '<div class="callout ' + (ok ? "good" : "bad") + '"><strong>' + (ok ? "Correct" : "Incorrect") + '</strong><p>' + esc(answerLine(current)) + '</p><p>' + esc(current.explanation) + '</p></div>';
+    }
+    body += '<div class="nav">';
+    body += '<button type="button" class="action secondary" id="prev"' + (index === 0 ? " disabled" : "") + '>Previous</button>';
+    body += revealed
+      ? '<button type="button" class="action ghost" id="again">Try again</button>'
+      : '<button type="button" class="action" id="check">Check answer</button>';
+    body += '<button type="button" class="action secondary" id="next"' + (index >= list.length - 1 ? " disabled" : "") + '>Next</button>';
+    body += '<select id="jump" class="jump">';
+    list.forEach((q, i) => {
+      body += '<option value="' + i + '"' + (i === index ? " selected" : "") + '>' + (i + 1) + '. Item ' + esc(q.ref) + '</option>';
+    });
+    body += '</select></div>';
+  }
+  body += '<div class="tools"><button type="button" class="action secondary" id="score">Score entire exam</button><button type="button" class="action ghost" id="retry"' + (tally.missed === 0 ? " disabled" : "") + '>Retry missed</button><button type="button" class="action ghost" id="reset">Start over</button></div>';
+  body += '<footer>Your answers stay on this phone until you start over. Add this page to your home screen so you can open it in one tap at school. Scoring the whole exam marks unanswered items incorrect.</footer>';
+  document.getElementById("app").innerHTML = filterHtml + body;
+
+  document.getElementById("filter").onchange = (event) => {
+    state.topic = event.target.value;
+    state.index = 0;
+    nudge = "";
+    render();
+  };
+  const jump = document.getElementById("jump");
+  if (jump) jump.onchange = (event) => { state.index = Number(event.target.value); nudge = ""; render(); };
+  const prev = document.getElementById("prev");
+  const next = document.getElementById("next");
+  if (prev) prev.onclick = () => { state.index = Math.max(0, index - 1); nudge = ""; render(); };
+  if (next) next.onclick = () => { state.index = Math.min(list.length - 1, index + 1); nudge = ""; render(); };
+  const check = document.getElementById("check");
+  if (check) check.onclick = () => {
+    if (!isAttempted(current)) {
+      nudge = current.kind === "match" ? "Match every item before checking." : "Choose an answer before checking.";
+      render();
+      return;
+    }
+    nudge = "";
+    state.revealed[current.id] = true;
+    render();
+  };
+  const again = document.getElementById("again");
+  if (again) again.onclick = () => {
+    delete state.revealed[current.id];
+    delete state.answers[current.id];
+    delete state.matches[current.id];
+    delete state.orders[current.id];
+    nudge = "";
+    render();
+  };
+  document.querySelectorAll("[data-pick]").forEach((button) => {
+    button.onclick = () => {
+      if (state.revealed[current.id]) return;
+      state.answers[current.id] = button.getAttribute("data-pick");
+      nudge = "";
+      render();
+    };
+  });
+  document.querySelectorAll("[data-match]").forEach((select) => {
+    select.onchange = () => {
+      const itemId = select.getAttribute("data-match");
+      state.matches[current.id] = Object.assign({}, state.matches[current.id] || {}, { [itemId]: select.value });
+      nudge = "";
+      render();
+    };
+  });
+  document.querySelectorAll("[data-move]").forEach((button) => {
+    button.onclick = () => {
+      const at = Number(button.getAttribute("data-at"));
+      const dir = Number(button.getAttribute("data-move"));
+      const order = (state.orders[current.id] || current.initial).slice();
+      const to = at + dir;
+      if (to < 0 || to >= order.length) return;
+      const swap = order[at];
+      order[at] = order[to];
+      order[to] = swap;
+      state.orders[current.id] = order;
+      render();
+    };
+  });
+  document.getElementById("score").onclick = () => {
+    QUESTIONS.forEach((q) => { state.revealed[q.id] = true; });
+    nudge = "";
+    render();
+    window.scrollTo(0, 0);
+  };
+  document.getElementById("retry").onclick = () => {
+    const ids = QUESTIONS.filter((q) => state.revealed[q.id] && !isCorrect(q)).map((q) => q.id);
+    ids.forEach((id) => {
+      delete state.revealed[id];
+      delete state.answers[id];
+      delete state.matches[id];
+      delete state.orders[id];
+    });
+    if (!ids.length) return;
+    state.retryIds = ids;
+    state.topic = "Retry";
+    state.index = 0;
+    nudge = "";
+    render();
+  };
+  document.getElementById("reset").onclick = () => {
+    if (!confirm("Clear every answer saved on this phone?")) return;
+    state = emptyState();
+    nudge = "";
+    lastId = "";
+    render();
+  };
+  if (current && current.id !== lastId) {
+    lastId = current.id;
+    window.scrollTo(0, 0);
+  }
+}
+render();
+</script>
+</body>
+</html>
